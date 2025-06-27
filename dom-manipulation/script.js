@@ -170,3 +170,79 @@ updateCategoryDropdown();
 createAddQuoteForm();
 newQuoteBtn.addEventListener("click", showRandomQuote);
 
+function populateCategories() {
+  const uniqueCategories = ["all", ...new Set(quotes.map(q => q.category))];
+
+  // Update both dropdowns
+  [categorySelect, categoryFilter].forEach(dropdown => {
+    dropdown.innerHTML = ""; // Clear existing options
+    uniqueCategories.forEach(cat => {
+      const option = document.createElement("option");
+      option.value = cat;
+      option.textContent = cat;
+      dropdown.appendChild(option);
+    });
+  });
+
+  // Restore last selected filter from storage
+  const savedFilter = localStorage.getItem("lastFilter");
+  if (savedFilter && uniqueCategories.includes(savedFilter)) {
+    categoryFilter.value = savedFilter;
+    filterQuotes(); // Auto-filter when page loads
+  }
+}
+
+function filterQuotes() {
+  const selectedCategory = categoryFilter.value;
+  localStorage.setItem("lastFilter", selectedCategory);
+
+  const filteredQuotes = selectedCategory === "all"
+    ? quotes
+    : quotes.filter(q => q.category.toLowerCase() === selectedCategory.toLowerCase());
+
+  displayQuotes(filteredQuotes);
+}
+
+function displayQuotes(list) {
+  quoteDisplay.innerHTML = "";
+
+  if (list.length === 0) {
+    quoteDisplay.textContent = "No quotes in this category.";
+    return;
+  }
+
+  list.forEach(quote => {
+    const quoteElement = document.createElement("div");
+    quoteElement.innerHTML = `<blockquote>"${quote.text}"</blockquote><p><em>Category: ${quote.category}</em></p>`;
+    quoteDisplay.appendChild(quoteElement);
+  });
+}
+
+function addQuote() {
+  const text = document.getElementById("newQuoteText").value.trim();
+  const category = document.getElementById("newQuoteCategory").value.trim();
+
+  if (!text || !category) {
+    alert("Please enter both quote and category.");
+    return;
+  }
+
+  const newQuote = { text, category };
+  quotes.push(newQuote);
+  saveQuotes();
+  populateCategories(); // Refresh dropdowns
+  alert("Quote added!");
+
+  // Clear input fields
+  document.getElementById("newQuoteText").value = "";
+  document.getElementById("newQuoteCategory").value = "";
+}
+
+// Main app start
+loadQuotes();
+loadLastQuote();
+createAddQuoteForm();
+populateCategories();
+newQuoteBtn.addEventListener("click", showRandomQuote);
+
+

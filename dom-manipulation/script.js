@@ -333,4 +333,49 @@ async function postQuoteToServer(quote) {
   }
 }
 
+async function syncQuotes() {
+  try {
+    const response = await fetch('https://jsonplaceholder.typicode.com/posts');
+    const serverData = await response.json();
+
+    // Simulate server quotes by converting server data
+    const serverQuotes = serverData.slice(0, 10).map(post => ({
+      text: post.title,
+      category: "Server"
+    }));
+
+    // Load current local quotes
+    let localQuotes = JSON.parse(localStorage.getItem('quotes')) || [];
+
+    // Find quotes that are in server but not in local
+    const newQuotes = serverQuotes.filter(sq => 
+      !localQuotes.some(lq => lq.text === sq.text)
+    );
+
+    if (newQuotes.length > 0) {
+      quotes.push(...newQuotes);         // Update in-memory quotes array
+      saveQuotes();                      // Save to localStorage
+      populateCategories();              // Refresh dropdowns
+      filterQuotes();                    // Refresh displayed quotes
+      showNotification(`${newQuotes.length} new quote(s) synced from server.`);
+    }
+
+  } catch (error) {
+    console.error("Error during sync:", error);
+    showNotification("❌ Failed to sync with server.");
+  }
+}
+
+// App Initialization
+loadQuotes();
+loadLastQuote();
+createAddQuoteForm();
+populateCategories();
+newQuoteBtn.addEventListener("click", showRandomQuote);
+
+// 🔄 Sync on load + every 30 seconds
+syncQuotes();
+setInterval(syncQuotes, 30000); // Auto-sync every 30 sec
+
+
 

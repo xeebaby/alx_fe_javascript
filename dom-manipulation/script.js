@@ -89,3 +89,84 @@ function addQuote() {
 // Setup
 newQuoteBtn.addEventListener("click", showRandomQuote);
 createAddQuoteForm(); // Generate the form on page load
+
+function saveQuotes() {
+  localStorage.setItem('quotes', JSON.stringify(quotes));
+}
+
+function loadQuotes() {
+  const storedQuotes = localStorage.getItem('quotes');
+  if (storedQuotes) {
+    quotes = JSON.parse(storedQuotes);
+  }
+}
+
+function saveLastQuote(quote) {
+  sessionStorage.setItem('lastQuote', JSON.stringify(quote));
+}
+
+function loadLastQuote() {
+  const last = sessionStorage.getItem('lastQuote');
+  if (last) {
+    const quote = JSON.parse(last);
+    quoteDisplay.innerHTML = `<blockquote>"${quote.text}"</blockquote><p><em>Category: ${quote.category}</em></p>`;
+  }
+}
+
+saveLastQuote(quote);
+
+// Export Quotes as JSON file
+function exportToJsonFile() {
+  const dataStr = JSON.stringify(quotes, null, 2); // pretty print
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "quotes.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// Import Quotes from JSON file
+function importFromJsonFile(event) {
+  const fileReader = new FileReader();
+  fileReader.onload = function(e) {
+    try {
+      const importedQuotes = JSON.parse(e.target.result);
+      if (Array.isArray(importedQuotes)) {
+        quotes.push(...importedQuotes);
+        saveQuotes();
+        alert("Quotes imported successfully!");
+        updateCategoryDropdown();
+      } else {
+        alert("Invalid JSON format. Expected an array.");
+      }
+    } catch (error) {
+      alert("Failed to import: " + error.message);
+    }
+  };
+  fileReader.readAsText(event.target.files[0]);
+}
+
+function updateCategoryDropdown() {
+  const categories = ["all", ...new Set(quotes.map(q => q.category))];
+
+  // Clear and repopulate
+  categorySelect.innerHTML = "";
+  categories.forEach(cat => {
+    const opt = document.createElement("option");
+    opt.value = cat;
+    opt.textContent = cat;
+    categorySelect.appendChild(opt);
+  });
+}
+
+// Init everything on load
+loadQuotes();
+loadLastQuote();
+updateCategoryDropdown();
+createAddQuoteForm();
+newQuoteBtn.addEventListener("click", showRandomQuote);
+

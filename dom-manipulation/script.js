@@ -338,7 +338,7 @@ async function syncQuotes() {
     const response = await fetch('https://jsonplaceholder.typicode.com/posts');
     const serverData = await response.json();
 
-    // Simulate server quotes by converting server data
+    // Simulate server quotes from API data
     const serverQuotes = serverData.slice(0, 10).map(post => ({
       text: post.title,
       category: "Server"
@@ -353,11 +353,13 @@ async function syncQuotes() {
     );
 
     if (newQuotes.length > 0) {
-      quotes.push(...newQuotes);         // Update in-memory quotes array
-      saveQuotes();                      // Save to localStorage
-      populateCategories();              // Refresh dropdowns
-      filterQuotes();                    // Refresh displayed quotes
-      showNotification(`${newQuotes.length} new quote(s) synced from server.`);
+      quotes.push(...newQuotes);
+      saveQuotes();
+      populateCategories();
+      filterQuotes();
+      showNotification("Quotes synced with server!"); // ✅ Added message
+    } else {
+      showNotification("Quotes synced with server!"); // ✅ Still show confirmation even if no new ones
     }
 
   } catch (error) {
@@ -365,6 +367,15 @@ async function syncQuotes() {
     showNotification("❌ Failed to sync with server.");
   }
 }
+
+function showNotification(message) {
+  const notification = document.getElementById("notification");
+  notification.textContent = message;
+  setTimeout(() => {
+    notification.textContent = "";
+  }, 5000);
+}
+
 
 // App Initialization
 loadQuotes();

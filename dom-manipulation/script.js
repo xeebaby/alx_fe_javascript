@@ -245,4 +245,64 @@ createAddQuoteForm();
 populateCategories();
 newQuoteBtn.addEventListener("click", showRandomQuote);
 
+async function fetchQuotesFromServer() {
+  try {
+    const response = await fetch('https://jsonplaceholder.typicode.com/posts');
+    const data = await response.json();
+
+    // Convert server posts into quote format
+    const serverQuotes = data.slice(0, 10).map(post => ({
+      text: post.title,
+      category: "Server" // simulate server origin
+    }));
+
+    return serverQuotes;
+  } catch (error) {
+    console.error("Error fetching server quotes:", error);
+    return [];
+  }
+}
+
+async function syncWithServer() {
+  const serverQuotes = await fetchQuotesFromServer();
+
+  // Get local quotes
+  let localQuotes = JSON.parse(localStorage.getItem('quotes')) || [];
+
+  // Detect conflicts (simple: if text already exists, skip it)
+  let newQuotes = serverQuotes.filter(sq =>
+    !localQuotes.some(lq => lq.text === sq.text)
+  );
+
+  if (newQuotes.length > 0) {
+    quotes.push(...newQuotes);
+    saveQuotes();
+    populateCategories();
+    showNotification(`${newQuotes.length} new quote(s) synced from server.`);
+    filterQuotes();
+  }
+}
+
+setInterval(syncWithServer, 30000); // every 30 seconds
+
+function showNotification(message) {
+  const notification = document.getElementById("notification");
+  notification.textContent = message;
+  setTimeout(() => notification.textContent = "", 5000);
+}
+
+let conflictQuotes = [];
+
+if (localQuotes.some(lq => lq.text === sq.text && lq.category !== sq.category)) {
+  conflictQuotes.push(sq);
+}
+
+loadQuotes();
+loadLastQuote();
+createAddQuoteForm();
+populateCategories();
+newQuoteBtn.addEventListener("click", showRandomQuote);
+syncWithServer(); // do initial sync on load
+setInterval(syncWithServer, 30000); // background sync
+
 

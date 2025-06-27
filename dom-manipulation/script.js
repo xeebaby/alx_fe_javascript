@@ -228,14 +228,20 @@ function addQuote() {
   }
 
   const newQuote = { text, category };
+
   quotes.push(newQuote);
   saveQuotes();
-  populateCategories(); // Refresh dropdowns
+  populateCategories();
   alert("Quote added!");
+
+  // Send to server
+  postQuoteToServer(newQuote);
 
   // Clear input fields
   document.getElementById("newQuoteText").value = "";
   document.getElementById("newQuoteCategory").value = "";
+}
+
 }
 
 // Main app start
@@ -304,5 +310,27 @@ populateCategories();
 newQuoteBtn.addEventListener("click", showRandomQuote);
 syncWithServer(); // do initial sync on load
 setInterval(syncWithServer, 30000); // background sync
+
+method: "POST",
+headers: {
+  "Content-Type": "application/json"
+}
+
+async function postQuoteToServer(quote) {
+  try {
+    const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(quote)
+    });
+
+    const data = await response.json();
+    console.log("Quote sent to server:", data);
+  } catch (error) {
+    console.error("Failed to post quote to server:", error);
+  }
+}
 
 
